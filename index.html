@@ -13,259 +13,266 @@
         <link rel="stylesheet" href="css/fontawesome-all.min.css">
         <link rel="stylesheet" href="css/leaflet.photon.css">
         <link rel="stylesheet" href="css/leaflet-measure.css">
-        <style>
-        html, body, #map {
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            margin: 0;
-        }
+       <style>
+html, body, #map {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
 
-        /* === DASHBOARD INFERIOR DIREITO (VIGOR + DECLIVIDADE) === */
-        #analysis-dashboard {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: rgba(255,255,255,0.97);
-            border: 1px solid #777;
-            border-radius: 6px;
-            padding: 10px 12px;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            width: 330px;
-            max-height: 280px;
-            overflow: auto;
-            display: none;
-        }
+/* === DASHBOARD INFERIOR DIREITO (VIGOR + DECLIVIDADE) === */
+#analysis-dashboard {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: rgba(255,255,255,0.97);
+    border: 1px solid #777;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    width: 330px;
+    max-height: 280px;
+    overflow: auto;
+    display: none;
+}
 
-        #analysis-dashboard h4 {
-            margin: 0 0 6px 0;
-            font-size: 13px;
-            text-align: center;
-        }
+#analysis-dashboard h4 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+    text-align: center;
+}
 
-        /* Botão de minimizar/maximizar dashboard */
-        #dashboard-toggle {
-            position: absolute;
-            top: 4px;
-            right: 6px;
-            border: none;
-            background: transparent;
-            font-size: 16px;
-            line-height: 1;
-            cursor: pointer;
-            padding: 0 3px;
-        }
+/* Botão de minimizar/maximizar dashboard */
+#dashboard-toggle {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 3px;
+}
 
-        .dashboard-section {
-            margin-top: 6px;
-            border-top: 1px solid #ccc;
-            padding-top: 6px;
-        }
+.dashboard-section {
+    margin-top: 6px;
+    border-top: 1px solid #ccc;
+    padding-top: 6px;
+}
 
-        .dashboard-section:first-of-type {
-            border-top: none;
-            padding-top: 0;
-            margin-top: 0;
-        }
+.dashboard-section:first-of-type {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+}
 
-        .dashboard-section h5 {
-            margin: 0 0 4px 0;
-            font-size: 12px;
-            text-align: left;
-        }
+.dashboard-section h5 {
+    margin: 0 0 4px 0;
+    font-size: 12px;
+    text-align: left;
+}
 
-        /* TABELA DE VIGOR DENTRO DO DASHBOARD */
-        table.vigor-table {
-            border-collapse: collapse;
-            width: 100%;
-        }
+/* TABELA DE VIGOR DENTRO DO DASHBOARD */
+table.vigor-table {
+    border-collapse: collapse;
+    width: 100%;
+}
 
-        table.vigor-table th,
-        table.vigor-table td {
-            border: 1px solid #666;
-            padding: 4px 6px;
-            text-align: center;
-            font-size: 12px;
-        }
+table.vigor-table th,
+table.vigor-table td {
+    border: 1px solid #666;
+    padding: 4px 6px;
+    text-align: center;
+    font-size: 12px;
+}
 
-        table.vigor-table thead th {
-            background: #e0e0e0;
-            font-weight: bold;
-        }
+table.vigor-table thead th {
+    background: #e0e0e0;
+    font-weight: bold;
+}
 
-        /* LEGENDA DE DECLIVIDADE DENTRO DO DASHBOARD */
-        .slope-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 3px;
-        }
+/* LEGENDA DE DECLIVIDADE DENTRO DO DASHBOARD */
+.slope-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3px;
+}
 
-        .slope-color {
-            width: 16px;
-            height: 12px;
-            border: 1px solid #444;
-            margin-right: 6px;
-        }
+.slope-color {
+    width: 16px;
+    height: 12px;
+    border: 1px solid #444;
+    margin-right: 6px;
+}
 
-        .slope-label {
-            flex: 1;
-        }
+.slope-label {
+    flex: 1;
+}
 
-        /* RESPONSIVO PARA CELULAR */
-        @media (max-width: 700px) {
-            #analysis-dashboard {
-                /* sobe o painel para não encostar no logo */
-                bottom: 120px;
-                right: 15px;
-                font-size: 11px;
-                width: 260px;
-                max-height: 220px;
-                padding: 8px 10px;
-            }
+/* ===== TÍTULO DO VOO (DESKTOP) ===== */
+#rgb-info-box {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.96);
+    border: 1px solid #777;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    z-index: 900;
+    text-align: center;
+}
 
-            table.vigor-table th,
-            table.vigor-table td {
-                font-size: 11px;
-                padding: 3px;
-            }
-        }
+/* título em cima, subtítulo embaixo */
+#rgb-info-box strong {
+    display: block;
+    font-weight: bold;
+}
 
-        /* === CAIXA DE INFORMAÇÃO PARA IMAGENS RGB (DATAS DOS VOOS) === */
-        #rgb-info-box {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1100;
-            background: rgba(255,255,255,0.96);
-            border: 1px solid #777;
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            display: none;
-            text-align: center;
-        }
+#rgb-info-box span {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+}
 
-        #rgb-info-box strong {
-            display: block;
-        }
+/* ===== Ajustes finos para celular ===== */
+@media (max-width: 700px) {
 
-        #rgb-info-box span {
-            display: block;
-            margin-top: 2px;
-            font-size: 13px;
-        }
+    /* TÍTULO DO VOO */
+    #rgb-info-box {
+        top: 95px !important;       /* desce bastante para não bater no layers */
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        font-size: 12px !important;
+        padding: 6px 10px !important;
+        max-width: 85% !important;
+        z-index: 9999 !important;   /* fica sempre acima */
+    }
 
-        @media (max-width: 700px) {
-            #rgb-info-box {
-                /* desce o título para não sobrepor o controle de layers */
-                top: 70px;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 12px;
-                padding: 6px 10px;
-                max-width: 80%;
-            }
+    /* CONTROLE DE LAYERS */
+    .leaflet-top.leaflet-right .leaflet-control-layers {
+        margin-top: 150px !important;  /* empurra o painel de camadas para baixo */
+        transform: scale(0.90) !important;
+        z-index: 9999 !important;
+    }
 
-            #rgb-info-box span {
-                font-size: 11px;
-            }
+    /* LOGO ECO MAP */
+    #ecomap-logo {
+        bottom: 5px !important;
+        left: 5px !important;
+    }
 
-            /* opcional: dá um pequeno respiro no controle de layers */
-            .leaflet-top.leaflet-right .leaflet-control-layers {
-                margin-top: 8px;
-            }
-        }
+    #ecomap-logo img {
+        max-width: 80px !important; /* menor ainda */
+    }
 
-        /* === ROSA DOS VENTOS PARA ASPECTO (CENTRO DA TELA) === */
-        #aspect-compass {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            display: none;
-        }
+    #ecomap-logo .ecomap-credit {
+        font-size: 8.5px !important;
+        padding: 3px 5px !important;
+    }
 
-        #aspect-compass img {
-            max-width: 130px;
-            height: auto;
-            display: block;
-        }
+    /* DASHBOARD (ANÁLISES) */
+    #analysis-dashboard {
+        bottom: 95px !important;     /* sobe para não encostar na logo */
+        right: 10px !important;
+        width: 260px !important;
+        max-height: 230px !important;
+        font-size: 11px !important;
+    }
+}
 
-        @media (max-width: 700px) {
-            #aspect-compass img {
-                max-width: 100px;
-            }
-        }
+/* === ROSA DOS VENTOS PARA ASPECTO (CENTRO DA TELA) === */
+#aspect-compass {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    display: none;
+}
 
-        /* === LOGO ECO MAP (CANTO INFERIOR ESQUERDO) === */
-        #ecomap-logo {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 900;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* centraliza logo sobre o quadro */
-        }
+#aspect-compass img {
+    max-width: 130px;
+    height: auto;
+    display: block;
+}
 
-        #ecomap-logo img {
-            max-width: 140px;
-            height: auto;
-            display: block;
-        }
+@media (max-width: 700px) {
+    #aspect-compass img {
+        max-width: 100px;
+    }
+}
 
-        #ecomap-logo .ecomap-credit {
-            margin-top: 6px;
-            background: rgba(255,255,255,0.96);
-            border: 1px solid #777;
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            line-height: 1.35;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            text-align: left;
-        }
+/* === LOGO ECO MAP (CANTO INFERIOR ESQUERDO) === */
+#ecomap-logo {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-        @media (max-width: 700px) {
-            #ecomap-logo {
-                /* fica bem colado no canto para sobrar mapa e não bater no dashboard */
-                bottom: 10px;
-                left: 10px;
-            }
+#ecomap-logo img {
+    max-width: 140px;
+    height: auto;
+    display: block;
+}
 
-            #ecomap-logo img {
-                max-width: 90px;  /* logo menor */
-            }
+#ecomap-logo .ecomap-credit {
+    margin-top: 6px;
+    background: rgba(255,255,255,0.96);
+    border: 1px solid #777;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    line-height: 1.35;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    text-align: left;
+}
 
-            #ecomap-logo .ecomap-credit {
-                font-size: 9px;
-                padding: 3px 5px;
-            }
-        }
+@media (max-width: 700px) {
+    #ecomap-logo {
+        bottom: 10px;
+        left: 10px;
+    }
 
-        /* === ESTILO DO BOTÃO CENTRALIZAR (MESMO PADRÃO DOS OUTROS) === */
-        .leaflet-center-button {
-            display: block;
-            width: 30px;
-            height: 30px;
-            line-height: 30px;
-            text-align: center;
-            font-size: 16px;
-            text-decoration: none;
-        }
+    #ecomap-logo img {
+        max-width: 90px;
+    }
 
-        .leaflet-center-button i {
-            pointer-events: none;
-        }
-        </style>
+    #ecomap-logo .ecomap-credit {
+        font-size: 9px;
+        padding: 3px 5px;
+    }
+}
+
+/* === ESTILO DO BOTÃO CENTRALIZAR (MESMO PADRÃO DOS OUTROS) === */
+.leaflet-center-button {
+    display: block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    font-size: 16px;
+    text-decoration: none;
+}
+
+.leaflet-center-button i {
+    pointer-events: none;
+}
+</style>
+
         <title></title>
     </head>
     <body>
