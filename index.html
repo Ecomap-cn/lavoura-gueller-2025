@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet.photon.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* === DASHBOARD INFERIOR DIREITO (VIGOR + DECLIVIDADE) === */
+        #analysis-dashboard {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255,255,255,0.97);
+            border: 1px solid #777;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            width: 330px;
+            max-height: 280px;
+            overflow: auto;
+            display: none;
+        }
+
+        #analysis-dashboard h4 {
+            margin: 0 0 6px 0;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* Botão de minimizar/maximizar dashboard */
+        #dashboard-toggle {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 3px;
+        }
+
+        .dashboard-section {
+            margin-top: 6px;
+            border-top: 1px solid #ccc;
+            padding-top: 6px;
+        }
+
+        .dashboard-section:first-of-type {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        .dashboard-section h5 {
+            margin: 0 0 4px 0;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        /* TABELA DE VIGOR DENTRO DO DASHBOARD */
+        table.vigor-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table.vigor-table th,
+        table.vigor-table td {
+            border: 1px solid #666;
+            padding: 4px 6px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        table.vigor-table thead th {
+            background: #e0e0e0;
+            font-weight: bold;
+        }
+
+        /* LEGENDA DE DECLIVIDADE DENTRO DO DASHBOARD */
+        .slope-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        .slope-color {
+            width: 16px;
+            height: 12px;
+            border: 1px solid #444;
+            margin-right: 6px;
+        }
+
+        .slope-label {
+            flex: 1;
+        }
+
+        /* RESPONSIVO PARA CELULAR */
+        @media (max-width: 700px) {
+            #analysis-dashboard {
+                bottom: 15px;
+                right: 15px;
+                font-size: 11px;
+                width: 260px;
+                max-height: 220px;
+                padding: 8px 10px;
+            }
+
+            table.vigor-table th,
+            table.vigor-table td {
+                font-size: 11px;
+                padding: 3px;
+            }
+        }
+
+        /* === CAIXA DE INFORMAÇÃO PARA IMAGENS RGB (DATAS DOS VOOS) === */
+        #rgb-info-box {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1100;
+            background: rgba(255,255,255,0.96);
+            border: 1px solid #777;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            display: none;
+            text-align: center;
+        }
+
+        #rgb-info-box strong {
+            display: block;
+        }
+
+        #rgb-info-box span {
+            display: block;
+            margin-top: 2px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 700px) {
+            #rgb-info-box {
+                top: 15px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+
+            #rgb-info-box span {
+                font-size: 11px;
+            }
+        }
+
+        /* === ROSA DOS VENTOS PARA ASPECTO (CENTRO DA TELA) === */
+        #aspect-compass {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            display: none;
+        }
+
+        #aspect-compass img {
+            max-width: 130px;
+            height: auto;
+            display: block;
+        }
+
+        @media (max-width: 700px) {
+            #aspect-compass img {
+                max-width: 100px;
+            }
+        }
+
+        /* === LOGO ECO MAP (CANTO INFERIOR ESQUERDO) === */
+        #ecomap-logo {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 900;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* centraliza logo sobre o quadro */
+        }
+
+        #ecomap-logo img {
+            max-width: 140px;
+            height: auto;
+            display: block;
+        }
+
+        #ecomap-logo .ecomap-credit {
+            margin-top: 6px;
+            background: rgba(255,255,255,0.96);
+            border: 1px solid #777;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.35;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            text-align: left;
+        }
+
+        @media (max-width: 700px) {
+            #ecomap-logo {
+                bottom: 15px;
+                left: 15px;
+            }
+
+            #ecomap-logo img {
+                max-width: 110px;
+            }
+
+            #ecomap-logo .ecomap-credit {
+                font-size: 10px;
+                padding: 4px 6px;
+            }
+        }
+
+        /* === ESTILO DO BOTÃO CENTRALIZAR (MESMO PADRÃO DOS OUTROS) === */
+        .leaflet-center-button {
+            display: block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            font-size: 16px;
+            text-decoration: none;
+        }
+
+        .leaflet-center-button i {
+            pointer-events: none;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <!-- Caixa com informação dos voos RGB -->
+        <div id="rgb-info-box"></div>
+
+        <!-- DASHBOARD ANALÍTICO (VIGOR + DECLIVIDADE) -->
+        <div id="analysis-dashboard">
+            <button id="dashboard-toggle" title="Minimizar / maximizar painel">−</button>
+            <h4>Análises da Lavoura</h4>
+
+            <!-- Seção Vigor -->
+            <div id="dashboard-vigor" class="dashboard-section" style="display:none;">
+                <h5>Vigor da Lavoura</h5>
+                <table class="vigor-table">
+                  <thead>
+                    <tr>
+                        <th>Vigor</th>
+                        <th>Área (ha)</th>
+                        <th>% da área</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="background-color:#FF0000;">
+                        <td>Baixo</td>
+                        <td>0,79</td>
+                        <td>2,0%</td>
+                    </tr>
+                    <tr style="background-color:#FFFF00;">
+                        <td>Médio</td>
+                        <td>9,96</td>
+                        <td>25,8%</td>
+                    </tr>
+                    <tr style="background-color:#00FF00;">
+                        <td>Alto</td>
+                        <td>27,85</td>
+                        <td>72,2%</td>
+                    </tr>
+                    <tr>
+                        <td>Total</td>
+                        <td>38,59</td>
+                        <td>100%</td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+
+            <!-- Seção Declividade -->
+            <div id="dashboard-declividade" class="dashboard-section" style="display:none;">
+                <h5>Declividade (°)</h5>
+                <div class="slope-row">
+                    <div class="slope-color" style="background:#32CD32;"></div>
+                    <div class="slope-label">0° – 8°</div>
+                </div>
+                <div class="slope-row">
+                    <div class="slope-color" style="background:#FFFF00;"></div>
+                    <div class="slope-label">8° – 15°</div>
+                </div>
+                <div class="slope-row">
+                    <div class="slope-color" style="background:#FF8800;"></div>
+                    <div class="slope-label">15° – 25°</div>
+                </div>
+                <div class="slope-row">
+                    <div class="slope-color" style="background:#D00000;"></div>
+                    <div class="slope-label">25° – 45°</div>
+                </div>
+                <div class="slope-row">
+                    <div class="slope-color" style="background:#060006;"></div>
+                    <div class="slope-label">&gt; 45°</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROSA DOS VENTOS (APENAS PARA ASPECTO) -->
+        <div id="aspect-compass">
+            <img src="images/rosa_dos_ventos-removebg-preview.png" alt="Rosa dos ventos">
+        </div>
+
+        <!-- LOGO ECO MAP -->
+        <div id="ecomap-logo">
+            <img src="images/ecomap_logo-removebg-preview.png" alt="ECO MAP CN">
+            <div class="ecomap-credit">
+                <strong>Resp. Técnico:</strong> Denys R. Brehmer<br>
+                <strong>Contato:</strong> (49) 9 3381-8493
+            </div>
+        </div>
+
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.photon.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="data/TalhoGueller_1.js"></script>
+        <script src="data/CurvadeNvel_8.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[-27.017533734940084,-50.870305199238544],[-27.013643488587814,-50.86312498255055]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var imgTd = tempDiv.querySelector('td img');
+            if (imgTd) {
+                var src = imgTd.getAttribute('src');
+                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
+                    var audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = src;
+                    imgTd.parentNode.replaceChild(audio, imgTd);
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
+                    var video = document.createElement('video');
+                    video.controls = true;
+                    video.src = src;
+                    video.style.width = "400px";
+                    video.style.height = "300px";
+                    video.style.maxHeight = "60vh";
+                    video.style.maxWidth = "60vw";
+                    imgTd.parentNode.replaceChild(video, imgTd);
+                    popup._contentNode.classList.add('media');
+                    video.addEventListener('loadedmetadata', function() {
+                        popup.update();
+                    });
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else {
+                    popup._contentNode.classList.remove('media');
+                }
+            } else {
+                popup._contentNode.classList.remove('media');
+            }
+        }
+
+        // ZOOM
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+
+        // GEOLOCALIZAÇÃO
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+
+        // RÉGUA (MEASURE)
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+
+        // === BOTÃO CENTRALIZAR NO TALHÃO ===
+        map.whenReady(function () {
+            var leftTop = document.querySelector('.leaflet-top.leaflet-left');
+            if (!leftTop) return;
+
+            var measureToggle = document.getElementsByClassName('leaflet-control-measure-toggle')[0];
+            var measureContainer = measureToggle ? measureToggle.parentNode : null;
+
+            var centerContainer = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            var centerLink = L.DomUtil.create('a', 'leaflet-center-button', centerContainer);
+            centerLink.href = '#';
+            centerLink.title = 'Centralizar no talhão';
+            centerLink.innerHTML = '<i class="fas fa-home"></i>';
+
+            if (measureContainer && measureContainer.parentNode === leftTop) {
+                leftTop.insertBefore(centerContainer, measureContainer);
+            } else {
+                leftTop.appendChild(centerContainer);
+            }
+
+            L.DomEvent.disableClickPropagation(centerContainer);
+            L.DomEvent.disableClickPropagation(centerLink);
+            L.DomEvent.on(centerLink, 'click', function (e) {
+                L.DomEvent.preventDefault(e);
+                map.fitBounds(layer_TalhoGueller_1.getBounds());
+            });
+        });
+
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_ESRISatellite_0');
+        map.getPane('pane_ESRISatellite_0').style.zIndex = 400;
+        var layer_ESRISatellite_0 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            pane: 'pane_ESRISatellite_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_ESRISatellite_0;
+        map.addLayer(layer_ESRISatellite_0);
+
+        // (pop_TalhoGueller_1 e pop_CurvadeNvel_8 continuam definidos, mas NÃO são mais usados)
+        function pop_TalhoGueller_1(feature, layer) {}
+        function pop_CurvadeNvel_8(feature, layer) {}
+
+        function style_TalhoGueller_1_0() {
+            return {
+                pane: 'pane_TalhoGueller_1',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TalhoGueller_1');
+        map.getPane('pane_TalhoGueller_1').style.zIndex = 401;
+        map.getPane('pane_TalhoGueller_1').style['mix-blend-mode'] = 'normal';
+        var layer_TalhoGueller_1 = new L.geoJson(json_TalhoGueller_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TalhoGueller_1',
+            layerName: 'layer_TalhoGueller_1',
+            pane: 'pane_TalhoGueller_1',
+            // onEachFeature removido para não criar popup
+            style: style_TalhoGueller_1_0,
+        });
+        bounds_group.addLayer(layer_TalhoGueller_1);
+        map.addLayer(layer_TalhoGueller_1);
+
+        map.createPane('pane_RGBVoo1_2');
+        map.getPane('pane_RGBVoo1_2').style.zIndex = 402;
+        var img_RGBVoo1_2 = 'data/RGBVoo1_2.png';
+        var img_bounds_RGBVoo1_2 = [[-27.018465656113378,-50.87318787593304],[-27.01417090820769,-50.8595149485662]];
+        var layer_RGBVoo1_2 = new L.imageOverlay(img_RGBVoo1_2,
+                                              img_bounds_RGBVoo1_2,
+                                              {pane: 'pane_RGBVoo1_2'});
+        bounds_group.addLayer(layer_RGBVoo1_2);
+
+        map.createPane('pane_RGBVoo2_3');
+        map.getPane('pane_RGBVoo2_3').style.zIndex = 403;
+        var img_RGBVoo2_3 = 'data/RGBVoo2_3.png';
+        var img_bounds_RGBVoo2_3 = [[-27.018465723828413,-50.873187876887364],[-27.014170956393816,-50.85951528416988]];
+        var layer_RGBVoo2_3 = new L.imageOverlay(img_RGBVoo2_3,
+                                              img_bounds_RGBVoo2_3,
+                                              {pane: 'pane_RGBVoo2_3'});
+        bounds_group.addLayer(layer_RGBVoo2_3);
+        map.addLayer(layer_RGBVoo2_3);
+
+        map.createPane('pane_DeltaNDRE_4');
+        map.getPane('pane_DeltaNDRE_4').style.zIndex = 404;
+        var img_DeltaNDRE_4 = 'data/DeltaNDRE_4.png';
+        var img_bounds_DeltaNDRE_4 = [[-27.018465870975614,-50.87318785681687],[-27.014170875822543,-50.85951506624336]];
+        var layer_DeltaNDRE_4 = new L.imageOverlay(img_DeltaNDRE_4,
+                                              img_bounds_DeltaNDRE_4,
+                                              {pane: 'pane_DeltaNDRE_4'});
+        bounds_group.addLayer(layer_DeltaNDRE_4);
+
+        map.createPane('pane_Vigor_5');
+        map.getPane('pane_Vigor_5').style.zIndex = 405;
+        var img_Vigor_5 = 'data/Vigor_5.png';
+        var img_bounds_Vigor_5 = [[-27.018465870975614,-50.87318785681687],[-27.014170875822543,-50.85951506624336]];
+        var layer_Vigor_5 = new L.imageOverlay(img_Vigor_5,
+                                              img_bounds_Vigor_5,
+                                              {pane: 'pane_Vigor_5'});
+        bounds_group.addLayer(layer_Vigor_5);
+
+        map.createPane('pane_Declividade_6');
+        map.getPane('pane_Declividade_6').style.zIndex = 406;
+        var img_Declividade_6 = 'data/Declividade_6.png';
+        var img_bounds_Declividade_6 = [[-27.018465732752563,-50.87318776086817],[-27.014171041110377,-50.859515131939816]];
+        var layer_Declividade_6 = new L.imageOverlay(img_Declividade_6,
+                                              img_bounds_Declividade_6,
+                                              {pane: 'pane_Declividade_6'});
+        bounds_group.addLayer(layer_Declividade_6);
+
+        map.createPane('pane_Aspecto_7');
+        map.getPane('pane_Aspecto_7').style.zIndex = 407;
+        var img_Aspecto_7 = 'data/Aspecto_7.png';
+        var img_bounds_Aspecto_7 = [[-27.018465732752563,-50.87318776086817],[-27.014171041110377,-50.859515131939816]];
+        var layer_Aspecto_7 = new L.imageOverlay(img_Aspecto_7,
+                                              img_bounds_Aspecto_7,
+                                              {pane: 'pane_Aspecto_7'});
+        bounds_group.addLayer(layer_Aspecto_7);
+
+        function style_CurvadeNvel_8_0() {
+            return {
+                pane: 'pane_CurvadeNvel_8',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: false,
+            }
+        }
+        map.createPane('pane_CurvadeNvel_8');
+        map.getPane('pane_CurvadeNvel_8').style.zIndex = 408;
+        map.getPane('pane_CurvadeNvel_8').style['mix-blend-mode'] = 'normal';
+        var layer_CurvadeNvel_8 = new L.geoJson(json_CurvadeNvel_8, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_CurvadeNvel_8',
+            layerName: 'layer_CurvadeNvel_8',
+            pane: 'pane_CurvadeNvel_8',
+            // onEachFeature removido para não criar popup
+            style: style_CurvadeNvel_8_0,
+        });
+        bounds_group.addLayer(layer_CurvadeNvel_8);
+
+        var overlaysTree = [
+            {label: '<img src="legend/CurvadeNvel_8.png" /> Curva de Nível', layer: layer_CurvadeNvel_8},
+            {label: "Aspecto", layer: layer_Aspecto_7},
+            {label: "Declividade", layer: layer_Declividade_6},
+            {label: "Vigor", layer: layer_Vigor_5},
+            {label: "Delta NDRE", layer: layer_DeltaNDRE_4},
+            {label: "RGB Voo 2", layer: layer_RGBVoo2_3},
+            {label: "RGB Voo 1", layer: layer_RGBVoo1_2},
+            {label: '<img src="legend/TalhoGueller_1.png" /> Talhão Gueller', layer: layer_TalhoGueller_1},
+            {label: "ESRI Satellite", layer: layer_ESRISatellite_0}
+        ];
+        var lay = L.control.layers.tree(null, overlaysTree, {
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        L.ImageOverlay.include({
+            getBounds: function () {
+                return this._bounds;
+            }
+        });
+
+        // ===== DASHBOARD: MOSTRAR/OCULTAR VIGOR + DECLIVIDADE + MINIMIZAR =====
+        var dashboard = document.getElementById('analysis-dashboard');
+        var dashVigor = document.getElementById('dashboard-vigor');
+        var dashDecliv = document.getElementById('dashboard-declividade');
+        var dashToggle = document.getElementById('dashboard-toggle');
+        var dashboardCollapsed = false;
+
+        function refreshDashboard() {
+            var showSomething = false;
+
+            if (map.hasLayer(layer_Vigor_5)) {
+                showSomething = true;
+                if (!dashboardCollapsed) {
+                    dashVigor.style.display = 'block';
+                } else {
+                    dashVigor.style.display = 'none';
+                }
+            } else {
+                dashVigor.style.display = 'none';
+            }
+
+            if (map.hasLayer(layer_Declividade_6)) {
+                showSomething = true;
+                if (!dashboardCollapsed) {
+                    dashDecliv.style.display = 'block';
+                } else {
+                    dashDecliv.style.display = 'none';
+                }
+            } else {
+                dashDecliv.style.display = 'none';
+            }
+
+            if (showSomething) {
+                dashboard.style.display = 'block';
+            } else {
+                dashboard.style.display = 'none';
+                dashboardCollapsed = false;
+                dashToggle.textContent = '−';
+            }
+        }
+
+        dashToggle.addEventListener('click', function() {
+            dashboardCollapsed = !dashboardCollapsed;
+            dashToggle.textContent = dashboardCollapsed ? '+' : '−';
+            refreshDashboard();
+        });
+
+        map.on('overlayadd', function(e) {
+            if (e.layer === layer_Vigor_5 || e.layer === layer_Declividade_6) {
+                refreshDashboard();
+            }
+        });
+
+        map.on('overlayremove', function(e) {
+            if (e.layer === layer_Vigor_5 || e.layer === layer_Declividade_6) {
+                refreshDashboard();
+            }
+        });
+
+        // ===== INFO BOX DAS IMAGENS RGB (DATAS DOS VOOS + ÁREA) =====
+        var rgbInfoBox = document.getElementById('rgb-info-box');
+
+        function updateRgbInfoBox() {
+            if (map.hasLayer(layer_RGBVoo1_2)) {
+                rgbInfoBox.innerHTML =
+                    '<strong>RGB Voo 1 — Voo realizado em 08/10/2025</strong>' +
+                    '<span>Área: 38,644 ha</span>';
+            } else if (map.hasLayer(layer_RGBVoo2_3)) {
+                rgbInfoBox.innerHTML =
+                    '<strong>RGB Voo 2 — Voo realizado em 10/11/2025</strong>' +
+                    '<span>Área: 38,644 ha</span>';
+            } else {
+                rgbInfoBox.style.display = 'none';
+                return;
+            }
+            rgbInfoBox.style.display = 'block';
+        }
+
+        map.on('overlayadd', function(e) {
+            if (e.layer === layer_RGBVoo1_2 || e.layer === layer_RGBVoo2_3) {
+                updateRgbInfoBox();
+            }
+        });
+
+        map.on('overlayremove', function(e) {
+            if (e.layer === layer_RGBVoo1_2 || e.layer === layer_RGBVoo2_3) {
+                updateRgbInfoBox();
+            }
+        });
+
+        // ===== ROSA DOS VENTOS PARA ASPECTO =====
+        var aspectCompass = document.getElementById('aspect-compass');
+
+        map.on('overlayadd', function(e) {
+            if (e.layer === layer_Aspecto_7) {
+                aspectCompass.style.display = 'block';
+            }
+        });
+
+        map.on('overlayremove', function(e) {
+            if (e.layer === layer_Aspecto_7) {
+                aspectCompass.style.display = 'none';
+            }
+        });
+
+        // chamadas iniciais
+        updateRgbInfoBox();
+        refreshDashboard();
+
+        </script>
+    </body>
+</html>
