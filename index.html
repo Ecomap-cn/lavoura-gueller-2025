@@ -117,7 +117,8 @@
         /* RESPONSIVO PARA CELULAR */
         @media (max-width: 700px) {
             #analysis-dashboard {
-                bottom: 15px;
+                /* sobe o painel para não encostar no logo */
+                bottom: 120px;
                 right: 15px;
                 font-size: 11px;
                 width: 260px;
@@ -162,15 +163,22 @@
 
         @media (max-width: 700px) {
             #rgb-info-box {
-                top: 15px;
+                /* desce o título para não sobrepor o controle de layers */
+                top: 70px;
                 left: 50%;
                 transform: translateX(-50%);
                 font-size: 12px;
                 padding: 6px 10px;
+                max-width: 80%;
             }
 
             #rgb-info-box span {
                 font-size: 11px;
+            }
+
+            /* opcional: dá um pequeno respiro no controle de layers */
+            .leaflet-top.leaflet-right .leaflet-control-layers {
+                margin-top: 8px;
             }
         }
 
@@ -228,17 +236,18 @@
 
         @media (max-width: 700px) {
             #ecomap-logo {
-                bottom: 15px;
-                left: 15px;
+                /* fica bem colado no canto para sobrar mapa e não bater no dashboard */
+                bottom: 10px;
+                left: 10px;
             }
 
             #ecomap-logo img {
-                max-width: 110px;
+                max-width: 90px;  /* logo menor */
             }
 
             #ecomap-logo .ecomap-credit {
-                font-size: 10px;
-                padding: 4px 6px;
+                font-size: 9px;
+                padding: 3px 5px;
             }
         }
 
